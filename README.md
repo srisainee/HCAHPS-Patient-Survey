@@ -1,4 +1,6 @@
-# Does national health care spending correlate to patient satisfaction and ranking of hospitals in the U.S?
+![/U.S. HCAHPS Survey Analysis.png](https://github.com/srisainee/HCAHPS-Patient-Survey/blob/main/U.S.%20HCAHPS%20Survey%20Analysis.png)
+
+# U.S HCAHPS Survey Analysis
 
 The American Hospital Association (AHA), a national organization that represents hospitals and their patients, and acts as a source of information on health care issues and trends. The dataset is the Hospital Consumer Assessment of Healthcare Providers and Systems (HCAHPS) survey results for the last 9 years provided by [Maven Analytics](https://mavenanalytics.io/challenges/maven-healthcare-challenge/26).  
 
@@ -14,27 +16,14 @@ The surveys contains questions to evaluate the following measures:
     Quietness of Hospital Environment - H_QUITE_HSP
     Overall Hospital Rating - H_HSP_RATING
     Willingness to Recommend the Hospital - H_RECMND
+    
 
+    
 ### Purpose of analysis
-The purpose of this report is to test the hypothesis if the national spendig on healthcare influence the ranking of the hospitals. To test the hypothesis, the inflation adjusted national health expentditure from 1970 to 2021 from [Peterson-KFF Health System Tracker](https://www.healthsystemtracker.org/chart-collection/u-s-spending-healthcare-changed-time/#:~:text=Total%20national%20health%20expenditures%2C%20US%20%24%20per%20capita%2C%201970%2D,from%20one%20period%20to%20another.&text=On%20a%20per%20capita%20basis%2C%20health%20spending%20has%20increased%20in,1970%20to%20%2412%2C914%20in%202021.
- "Optional link title") sourced from the National Health Expenditure (NHE). This data was chosen in particular because the expenditure was recorded on a per capita basis and inflation adjusted which makes the year or year comparision equal.  
-
-### Assumptions
-The assumption in the analysis is that the national health spend is for the calendar year. The periods the surveys were reported on was from October to September the following year. The assumption is made to help match the spending and survey period.
-
-
-```python
-# importing libraries and data
-import pandas as pd
-import numpy as np 
-from matplotlib import pyplot
-
-health_data = pd.read_csv('./GOOD_DATA/final/data-PhiPo.csv')
-national_results = pd.read_csv('./HCAHPS+Patient+Survey/data_tables/national_results.csv')
-```
+The aim of this analysis is to examine the factors influencing the rankings of hospitals across the states, first, by  testing the hypothesis if the states with higher number of facilities have higher ranking of the hospitals.
 
 ### Approach
-The approach taken to test the hypothesis is to filter the health expenditure data to start from 2014 in order to align with the survey periods which start from October 2013. The survey results in the format 
+The survey results in the format 
     
     Bottom-box Answer	Middle-box Answer	Top-box Answer
     Sometimes or never   Usually	          Always
@@ -43,145 +32,162 @@ Each record of the national survey results is represented in percentage and sums
 
 
 ```python
-# filtering health spend data to start from 2014 since the survey periods start from October 2013. 
-health_data = health_data[health_data.Year>=2014]
-health_data
+# importing libraries and data
+import pandas as pd
+import numpy as np 
+from matplotlib import pyplot
+```
+
+To investigate the relationship between the number of facilities in a state and the average ranking of hospitals in that state, Spearman's correlation test can be used as we are trying to find the relationship between 2 continuous variables. The assumption in this case is that the relationship is non linear and not normally distributed. Therefore, Spearman's rank correlation is a suitable choice as it is a non-parametric test that assesses the strength and direction of a monotonic relationship.
+
+###### Hypotheses:
+
+    Null Hypothesis: There is no correlation between the number of facilities and the average ranking of hospitals in
+    the states.
+    Alternate Hypothesis: There is a correlation between the number of facilities and the average ranking of hospitals in 
+    the states.
+
+
+```python
+from scipy.stats import spearmanr
+
+states_results = pd.read_csv('./HCAHPS+Patient+Survey/data_tables/state_results.csv')
+responses = pd.read_csv('./HCAHPS+Patient+Survey/data_tables/responses.csv')
+
+# grouping to get number of facilities surveyed by state
+facilities = responses.groupby(['Release Period', 'State']).agg({'Facility ID': 'nunique'}).reset_index()
+
+# exracting average hospital ratings of each state. 
+states = states_results[states_results['Measure ID'] == 'H_HSP_RATING']
+states = states[['Release Period','State', 'Top-box Percentage']]
+
+df = pd.merge(states, facilities, how='inner',  
+              left_on=['Release Period', 'State'], right_on=['Release Period', 'State'])
+
+x1 = df[['Facility ID']]
+x2 = df[['Top-box Percentage']]
+
+corr, p = spearmanr(x1, x2)
+print('Spearman correlation coefficient is ' + str(round(corr,3)) )
+print('Spearman p value is ' + str(round(p,3)) )
+
+if(p<0.05):
+    print("Significant relationship")
+```
+
+    Spearman correlation coefficient is 0.217
+    Spearman p value is 0.0
+    Significant relationship
+    
+
+A statistically significant correlation is observed which indicates that we reject the null hypothesis as there is sufficient evidence to claim that there is a significant relationship between the number of facilities in ths state and the ranking of the hospitals in the state. 
+
+A positive correlation coefficient indicates a positive relationship as when the number of facilities in a state increases, the ranking of the state also increases. However, the being coefficient close to zero suggests a weak or no linear relationship. 
+
+In this case, it is essential to consider both pieces of information together. A weak correlation may not be practically significant if it is statistically significant. Additionally, correlation does not imply causation, and other factors should be considered in a comprehensive analysis of the relationship between variables.
+
+To further investigate the factors that affect the rankings of the hospitals, the relationship between healthcare spending and the ranking of hospitals will be investigated. 
+
+## Does health care spending correlate to patient satisfaction and ranking of hospitals across different states?
+
+To test the hypothesis if the spending on healthcare influence the ranking of the hospitals Per Person State Public Health Funding data is sourced from the [State Health Access Data Assistance Center](https://statehealthcompare.shadac.org/Bulk#1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52/117). 
+This dataset was selected due to its documentation of per capita public healthcare funding by state and alignment with the survey period, both tracking the fiscal year which is expected to yield more precise outcomes [[1]](https://www.investopedia.com/terms/f/fiscalyear.asp#:~:text=For%20example%2C%20the%20U.S.%20government's,channels%20to%20Congress%20for%20approval).
+ 
+Since the hypothesis is investigating relationship between 2 continous variables - the state wise health expenditure and the hospital ranking in the states, Spearman’s Correlation test will be used again.  
+
+In addition to the overall hospital ranking, the realtionship between the health expenditure and each of the measure surveyed is tested to prove if there is a statistically significant relationship between the ranking and the evaluation measures. 
+
+###### Hypothesis 
+    Null Hypothesis: There is no correlation between the 2 variables
+    Alternate Hypothesis: There is a linear relationship between the 2 variables i.e, the measure increases and/or decreases with the health spend.
+
+
+```python
+state_spends = pd.read_csv('./Shadac-BulkData-03122024/Per capita state public health funding.csv')
+state_spends = state_spends.rename(columns={'Location':'State', 'TimeFrame': 'Year', 'Data': 'Funding'})
+state_spends = state_spends[['Year', 'State', 'Funding']]
+state_spends = state_spends.fillna(method='ffill')
+
+state_abbr = pd.read_csv('./HCAHPS+Patient+Survey/data_tables/states.csv')
+states_results = pd.merge(states_results, state_abbr, how='inner', left_on='State', right_on='State')
+states_results['Year'] = states_results['Release Period'].str.strip().str[-4:]
+states_results['Year'] = states_results['Year'].astype(int)
+states_results['Year'] = states_results['Year'] -1
+states_results = states_results[['Year', 'State Name', 'Measure ID','Top-box Percentage']]
+states_results = states_results.rename(columns={'State Name':'State'})
+
+state_data = pd.merge(states_results, state_spends, how='inner', left_on=['Year', 'State'], right_on=['Year', 'State'])
+state_data
 ```
 
 
 
 
 <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
       <th></th>
       <th>Year</th>
-      <th>Total national health expenditures</th>
-      <th>Constant 2021 dollars</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>44</th>
-      <td>2014</td>
-      <td>3002.6</td>
-      <td>3374.3</td>
-    </tr>
-    <tr>
-      <th>45</th>
-      <td>2015</td>
-      <td>3165.4</td>
-      <td>3549.3</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>2016</td>
-      <td>3307.4</td>
-      <td>3671.7</td>
-    </tr>
-    <tr>
-      <th>47</th>
-      <td>2017</td>
-      <td>3446.5</td>
-      <td>3757.4</td>
-    </tr>
-    <tr>
-      <th>48</th>
-      <td>2018</td>
-      <td>3604.4</td>
-      <td>3847.5</td>
-    </tr>
-    <tr>
-      <th>49</th>
-      <td>2019</td>
-      <td>3757.4</td>
-      <td>3951.8</td>
-    </tr>
-    <tr>
-      <th>50</th>
-      <td>2020</td>
-      <td>4144.1</td>
-      <td>4311.0</td>
-    </tr>
-    <tr>
-      <th>51</th>
-      <td>2021</td>
-      <td>4255.1</td>
-      <td>4255.1</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-
-```python
-# preparing survey data 
-results = national_results
-results['Release Period'] = results['Release Period'].replace({'07_' : ''}, regex=True)
-results['Release Period'] = results['Release Period'].astype(int)
-results['Release Period'] = results['Release Period'] -1 
-results = results[(results['Release Period']>=2014) & (results['Release Period']<=2021)]
-results
-```
-
-
-
-
-<div>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Release Period</th>
+      <th>State</th>
       <th>Measure ID</th>
-      <th>Bottom-box Percentage</th>
-      <th>Middle-box Percentage</th>
       <th>Top-box Percentage</th>
+      <th>Funding</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>2014</td>
+      <td>Alaska</td>
       <td>H_CLEAN_HSP</td>
-      <td>8</td>
-      <td>18</td>
-      <td>74</td>
+      <td>70</td>
+      <td>105.58</td>
     </tr>
     <tr>
       <th>1</th>
       <td>2014</td>
+      <td>Alaska</td>
       <td>H_COMP_1</td>
-      <td>4</td>
-      <td>17</td>
-      <td>79</td>
+      <td>74</td>
+      <td>105.58</td>
     </tr>
     <tr>
       <th>2</th>
       <td>2014</td>
+      <td>Alaska</td>
       <td>H_COMP_2</td>
-      <td>4</td>
-      <td>14</td>
-      <td>82</td>
+      <td>75</td>
+      <td>105.58</td>
     </tr>
     <tr>
       <th>3</th>
       <td>2014</td>
+      <td>Alaska</td>
       <td>H_COMP_3</td>
-      <td>9</td>
-      <td>23</td>
       <td>68</td>
+      <td>105.58</td>
     </tr>
     <tr>
       <th>4</th>
       <td>2014</td>
+      <td>Alaska</td>
       <td>H_COMP_5</td>
-      <td>18</td>
-      <td>17</td>
-      <td>65</td>
+      <td>64</td>
+      <td>105.58</td>
     </tr>
     <tr>
       <th>...</th>
@@ -192,294 +198,123 @@ results
       <td>...</td>
     </tr>
     <tr>
-      <th>75</th>
+      <th>3985</th>
       <td>2021</td>
+      <td>Wyoming</td>
       <td>H_COMP_6</td>
-      <td>14</td>
-      <td>0</td>
-      <td>86</td>
+      <td>88</td>
+      <td>27.23</td>
     </tr>
     <tr>
-      <th>76</th>
+      <th>3986</th>
       <td>2021</td>
+      <td>Wyoming</td>
       <td>H_COMP_7</td>
-      <td>6</td>
-      <td>42</td>
-      <td>52</td>
+      <td>54</td>
+      <td>27.23</td>
     </tr>
     <tr>
-      <th>77</th>
+      <th>3987</th>
       <td>2021</td>
+      <td>Wyoming</td>
       <td>H_HSP_RATING</td>
-      <td>8</td>
-      <td>20</td>
-      <td>72</td>
-    </tr>
-    <tr>
-      <th>78</th>
-      <td>2021</td>
-      <td>H_QUIET_HSP</td>
-      <td>10</td>
-      <td>27</td>
-      <td>63</td>
-    </tr>
-    <tr>
-      <th>79</th>
-      <td>2021</td>
-      <td>H_RECMND</td>
-      <td>6</td>
-      <td>23</td>
       <td>71</td>
+      <td>27.23</td>
+    </tr>
+    <tr>
+      <th>3988</th>
+      <td>2021</td>
+      <td>Wyoming</td>
+      <td>H_QUIET_HSP</td>
+      <td>66</td>
+      <td>27.23</td>
+    </tr>
+    <tr>
+      <th>3989</th>
+      <td>2021</td>
+      <td>Wyoming</td>
+      <td>H_RECMND</td>
+      <td>69</td>
+      <td>27.23</td>
     </tr>
   </tbody>
 </table>
-<p>80 rows × 5 columns</p>
+<p>3990 rows × 5 columns</p>
 </div>
 
 
 
-### Hypothesis Testing
-The hypothesis will be testing if there is a relationship between 2 continous variables - the national health expenditure and the overall national ranking in the US. For this hypothesis testing, Spearman’s Correlation test will be used to test the correlation between as the variables' distribution is not normal and Spearman’s Correlation assumes non-Gaussian distribution. 
-
-In addition to the overall hospital ranking, the realtionship between the health expenditure and each of the measure is tested to prove if there is a statistically significant relationship between the ranking and the evaluation measures. 
-
-###### Hypothesis 
-    Null Hypothesis: There is no correlation between the 2 variables
-    Alternate Hypothesis: There is a linear relationship between the 2 variables i.e, the measure increases and/or decreases with the health spend. 
-
 
 ```python
-from scipy.stats import spearmanr
-
-# list the measures to iterate to get the Spearman correlation for each of the measure
-measures = ['H_COMP_1','H_COMP_2','H_COMP_3','H_COMP_5','H_COMP_6','H_COMP_7','H_CLEAN_HSP','H_QUIET_HSP','H_HSP_RATING','H_RECMND']
+measures = ['H_COMP_1','H_COMP_2','H_COMP_3','H_COMP_5','H_COMP_6','H_COMP_7','H_CLEAN_HSP',
+            'H_QUIET_HSP','H_HSP_RATING','H_RECMND']
 
 for measure in measures :
-    measure_df = results[results['Measure ID'] == measure]
+    df = state_data[state_data['Measure ID'] == measure]
     
-    df = pd.merge(health_data, measure_df, how='inner',  left_on='Year', right_on='Release Period')
-    df = df[['Year', 'Constant 2021 dollars', 'Top-box Percentage']]
-    
-    x1 = df[['Constant 2021 dollars']]
+    x1 = df[['Funding']]
     x2 = df[['Top-box Percentage']]
 
-    corr, _ = spearmanr(x1, x2)
-    print('Spearman correlation for measure ' + measure + ' is ' + str(round(corr,3)) )
-    print('Spearman p value for measure ' + measure + ' is ' + str(round(_,3)) )
-    
-    if(_<0.05):
-        print(measure)
-    print("\n")
+    corr, p = spearmanr(x1, x2)
 
+    if(p<0.05):
+        print('Spearman correlation for measure ' + measure + ' is ' + str(round(corr,3)) )
+        print('Spearman p value for measure ' + measure + ' is ' + str(round(p,3)) )
 ```
 
-    Spearman correlation for measure H_COMP_1 is 0.73
-    Spearman p value for measure H_COMP_1 is 0.04
-    H_COMP_1
-    
-    
-    Spearman correlation for measure H_COMP_2 is -0.405
-    Spearman p value for measure H_COMP_2 is 0.319
-    
-    
-    Spearman correlation for measure H_COMP_3 is 0.358
-    Spearman p value for measure H_COMP_3 is 0.385
-    
-    
-    Spearman correlation for measure H_COMP_5 is 0.326
-    Spearman p value for measure H_COMP_5 is 0.431
-    
-    
-    Spearman correlation for measure H_COMP_6 is 0.126
-    Spearman p value for measure H_COMP_6 is 0.766
-    
-    
-    Spearman correlation for measure H_COMP_7 is 0.643
-    Spearman p value for measure H_COMP_7 is 0.086
-    
-    
-    Spearman correlation for measure H_CLEAN_HSP is 0.432
-    Spearman p value for measure H_CLEAN_HSP is 0.285
-    
-    
-    Spearman correlation for measure H_QUIET_HSP is 0.126
-    Spearman p value for measure H_QUIET_HSP is 0.766
-    
-    
-    Spearman correlation for measure H_HSP_RATING is 0.481
-    Spearman p value for measure H_HSP_RATING is 0.227
-    
-    
-    Spearman correlation for measure H_RECMND is 0.394
-    Spearman p value for measure H_RECMND is 0.334
-    
-    
+    Spearman correlation for measure H_QUIET_HSP is -0.102
+    Spearman p value for measure H_QUIET_HSP is 0.042
+    Spearman correlation for measure H_HSP_RATING is -0.106
+    Spearman p value for measure H_HSP_RATING is 0.034
     
 
-The Spearman's test's p-value for each of the measure, expcept for H_COMP_1, are greater than 0.05 indicating that we fail to reject the null hypothesis. Therefore, there is no correlation between those measures and the healthcare spendings. 
+The results of the Spearman's correlation tests suggests that there is statistical significance correlation between the per capital health spend of the states and the ranking and quietness of the hospital facilities in that state. However, the coefficient of test indicates a weak negative correlation between per capita healthcare spending and the ranking and quietness of facilities in the state. This indicates an inverse relationship as per capita healthcare spending increases, the ranking and quietness of facilities tends to decrease, and vice versa. 
 
-Since the p value score for H_COMP_1 is less than 0.05, we reject the null hypothesis and conclude that there is a statistically significant evidence to show that there is a linear positive relationship between the national healthcare spending and the communication with nurses and the patients, i.e, more health care spend increases the satisfaction of patient's communication with nurses.
+This result suggests an association between the variables but does not necessarily indicate a causal relationship.
 
-We can assume that since the nation spends more on the health care and hospitals, more nurses are hired with the right qualifications who can promptly attend the patients which ultimately leads to good communication between patiendts and nurses but does not increase the ranking of the hospitals.
+To further investigate the factors influencing the ranking, the relationship between the evaluation measures themselves and the ranking of the hospitals in that state is tested. 
 
-#### Further analysis
-To understand if the measures are correlated with each other, the Spearman's correlation test is conducted within measures to test the hypothesis. 
+## Do higher scores in the evaluation measures correlate with increased ranking scores?
 
 
 ```python
-measures = ['H_COMP_1', 'H_COMP_2', 'H_COMP_3', 'H_COMP_5', 'H_COMP_6', 'H_COMP_7',
-            'H_CLEAN_HSP', 'H_QUIET_HSP', 'H_HSP_RATING', 'H_RECMND']
+measures = ['H_COMP_1', 'H_COMP_2', 'H_COMP_3', 'H_COMP_5', 'H_COMP_6', 'H_COMP_7', 'H_CLEAN_HSP', 'H_QUIET_HSP', 'H_RECMND']
+target_measure = 'H_HSP_RATING'
 
-for m1 in range(0, len(measures)):
-    for m2 in range(m1):
-        
-        m1_df = results[results['Measure ID'] == measures[m1]]
-        m1_df = m1_df.rename(columns={"Top-box Percentage": "M1"})
-        m2_df = results[results['Measure ID'] == measures[m2]]
-        m2_df = m2_df.rename(columns={"Top-box Percentage": "M2"})
-        df = pd.merge(m1_df, m2_df, how='inner',  on='Release Period')
-        df = df[['Release Period', 'M1', 'M2']]
+df = state_data.pivot_table(index=['Year', 'State'], columns='Measure ID', values='Top-box Percentage').reset_index()
 
-        x1 = df[['M1']]
-        x2 = df[['M2']]
+target_measure_values = df[target_measure]
+measures_values_to_compare = df[measures]
 
-        corr, _ = spearmanr(x1, x2)
-        
-        # show the measures that have statistical significant relationship.      
-        if _ <= 0.05:
-            print("p value less than 0.05")
-            print('Speaman correlation for ' +  measures[m2] + ' and ' +  measures[m1] + ' is ' + str(round(corr,3)) )
-            print('Spearman p value for for ' +  measures[m2] + ' and ' +  measures[m1] + ' is ' +  str(round(_,3)) )
-            print("\n")
-        
-        
-#         if corr < 0.05  :
-#             print("correlation less than 0")
-#             print('Speaman correlation for ' +  measures[m2] + ' and ' +  measures[m1] + ' is ' + str(round(corr,3)) )
-#             print('Spearman p value for for ' +  measures[m2] + ' and ' +  measures[m1] + ' is ' +  str(round(_,3)) )
-#             print("\n")
-
+# Calculate Spearman's correlation coefficients and p-values between the target measure and measures to compare
+# correlation_results = {}
+for measure in measures:
+    corr, p = spearmanr(measures_values_to_compare[measure], target_measure_values)
+    if(p<0.05):
+        print('Spearman correlation for measure ' + measure + ' is ' + str(round(corr,3)) )
+        print('Spearman p value for measure ' + measure + ' is ' + str(round(p,3)) )
 ```
 
-    p value less than 0.05
-    Speaman correlation for H_COMP_1 and H_COMP_3 is 0.727
-    Spearman p value for for H_COMP_1 and H_COMP_3 is 0.041
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_1 and H_COMP_5 is 0.707
-    Spearman p value for for H_COMP_1 and H_COMP_5 is 0.05
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_3 and H_COMP_5 is 0.979
-    Spearman p value for for H_COMP_3 and H_COMP_5 is 0.0
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_3 and H_COMP_6 is 0.743
-    Spearman p value for for H_COMP_3 and H_COMP_6 is 0.035
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_1 and H_COMP_7 is 0.831
-    Spearman p value for for H_COMP_1 and H_COMP_7 is 0.011
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_3 and H_COMP_7 is 0.883
-    Spearman p value for for H_COMP_3 and H_COMP_7 is 0.004
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_5 and H_COMP_7 is 0.901
-    Spearman p value for for H_COMP_5 and H_COMP_7 is 0.002
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_1 and H_CLEAN_HSP is 0.765
-    Spearman p value for for H_COMP_1 and H_CLEAN_HSP is 0.027
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_3 and H_CLEAN_HSP is 0.928
-    Spearman p value for for H_COMP_3 and H_CLEAN_HSP is 0.001
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_5 and H_CLEAN_HSP is 0.947
-    Spearman p value for for H_COMP_5 and H_CLEAN_HSP is 0.0
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_7 and H_CLEAN_HSP is 0.961
-    Spearman p value for for H_COMP_7 and H_CLEAN_HSP is 0.0
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_1 and H_HSP_RATING is 0.738
-    Spearman p value for for H_COMP_1 and H_HSP_RATING is 0.037
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_3 and H_HSP_RATING is 0.863
-    Spearman p value for for H_COMP_3 and H_HSP_RATING is 0.006
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_5 and H_HSP_RATING is 0.753
-    Spearman p value for for H_COMP_5 and H_HSP_RATING is 0.031
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_6 and H_HSP_RATING is 0.8
-    Spearman p value for for H_COMP_6 and H_HSP_RATING is 0.017
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_7 and H_HSP_RATING is 0.713
-    Spearman p value for for H_COMP_7 and H_HSP_RATING is 0.047
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_CLEAN_HSP and H_HSP_RATING is 0.713
-    Spearman p value for for H_CLEAN_HSP and H_HSP_RATING is 0.047
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_3 and H_RECMND is 0.907
-    Spearman p value for for H_COMP_3 and H_RECMND is 0.002
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_5 and H_RECMND is 0.802
-    Spearman p value for for H_COMP_5 and H_RECMND is 0.017
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_6 and H_RECMND is 0.745
-    Spearman p value for for H_COMP_6 and H_RECMND is 0.034
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_COMP_7 and H_RECMND is 0.73
-    Spearman p value for for H_COMP_7 and H_RECMND is 0.04
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_CLEAN_HSP and H_RECMND is 0.76
-    Spearman p value for for H_CLEAN_HSP and H_RECMND is 0.029
-    
-    
-    p value less than 0.05
-    Speaman correlation for H_HSP_RATING and H_RECMND is 0.976
-    Spearman p value for for H_HSP_RATING and H_RECMND is 0.0
-    
-    
+    Spearman correlation for measure H_COMP_1 is 0.84
+    Spearman p value for measure H_COMP_1 is 0.0
+    Spearman correlation for measure H_COMP_2 is 0.748
+    Spearman p value for measure H_COMP_2 is 0.0
+    Spearman correlation for measure H_COMP_3 is 0.775
+    Spearman p value for measure H_COMP_3 is 0.0
+    Spearman correlation for measure H_COMP_5 is 0.747
+    Spearman p value for measure H_COMP_5 is 0.0
+    Spearman correlation for measure H_COMP_6 is 0.62
+    Spearman p value for measure H_COMP_6 is 0.0
+    Spearman correlation for measure H_COMP_7 is 0.886
+    Spearman p value for measure H_COMP_7 is 0.0
+    Spearman correlation for measure H_CLEAN_HSP is 0.836
+    Spearman p value for measure H_CLEAN_HSP is 0.0
+    Spearman correlation for measure H_QUIET_HSP is 0.601
+    Spearman p value for measure H_QUIET_HSP is 0.0
+    Spearman correlation for measure H_RECMND is 0.877
+    Spearman p value for measure H_RECMND is 0.0
     
 
-Communication with Doctors and Quietness of Hospital Environment does not affect the Rating and Recommendation of the hospitals or any other metrics as there is no significant relationship between these variables. There is a high probability that the observed correlation between the other measures and the ranking is unlikely to have occurred by random chance alone and could rather be due to a true relationship in the population.
+From the results it can be observed that a statistically significant association exists between all measures and the hospital facility ratings across states. This relationship is positivity strong, implying that as the scores for each measure increase, the ranking of facilities within states also increase.
 
-Communication with Nurses have a strong positive relationship between Responsiveness of Staff, Communication about Medicines, Care Transition and Cleanliness of the Hospital which in turn have a strong relationship with each other and hence the overall rating and recommendation of the hospital.
-
-It can be concluded that the Communication with Nurses correlates to the rating of the hospitals and there is no significant relationship or correlation between the healthcare expenditure and the rating. 
+In conclusion, neither the number of facilities nor healthcare expenditure directly impacts hospital ratings. However, the analysis suggests that each of the other measures influence these ratings.
