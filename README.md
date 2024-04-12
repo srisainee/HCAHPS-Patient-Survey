@@ -1,12 +1,10 @@
-
-
-<img src="[Assets/icon.png](https://github.com/srisainee/HCAHPS-Patient-Survey/blob/main/U.S.%20HCAHPS%20Survey%20Analysis.png)" width="200">
+![/U.S. HCAHPS Survey Analysis.png](https://github.com/srisainee/HCAHPS-Patient-Survey/blob/main/U.S.%20HCAHPS%20Survey%20Analysis.png)
 
 # U.S HCAHPS Survey Analysis
 
-The American Hospital Association (AHA), a national organization that represents hospitals and their patients, and acts as a source of information on health care issues and trends. The dataset is the Hospital Consumer Assessment of Healthcare Providers and Systems (HCAHPS) survey results for the last 9 years provided by [Maven Analytics](https://mavenanalytics.io/challenges/maven-healthcare-challenge/26).  
+The American Hospital Association (AHA), is a national organization that represents hospitals and their patients, and acts as a source of information on health care issues and trends. The dataset is the Hospital Consumer Assessment of Healthcare Providers and Systems (HCAHPS) survey results for the last 9 years provided by [Maven Analytics](https://mavenanalytics.io/challenges/maven-healthcare-challenge/26).  
 
-The surveys contains questions to evaluate the following measures:
+The survey contains questions to evaluate the following measures:
 
     Communication with Nurses - H_COMP_1
     Communication with Doctors - H_COMP_2
@@ -22,7 +20,7 @@ The surveys contains questions to evaluate the following measures:
 
     
 ### Purpose of analysis
-The aim of this analysis is to examine the factors influencing the rankings of hospitals across the states, first, by  testing the hypothesis if the states with higher number of facilities have higher ranking of the hospitals.
+This analysis aims to examine the factors influencing the rankings of hospitals across the states, first, by testing the hypothesis if the states with the higher number of facilities have higher rankings of the hospitals.
 
 ### Approach
 The survey results in the format 
@@ -30,7 +28,7 @@ The survey results in the format
     Bottom-box Answer	Middle-box Answer	Top-box Answer
     Sometimes or never   Usually	          Always
 
-Each record of the national survey results is represented in percentage and sums up to 100%. Therefore, "Top-box Answer" of the result is chosen to test the hypothesis. The dataset is cleaned to merge with the expenditure data. 
+Each record of the national survey results is represented in percentage and sums up to 100%. Therefore, the "Top-box Answer" of the result is chosen to test the hypothesis. The dataset is cleaned to merge with the expenditure data. 
 
 
 ```python
@@ -40,7 +38,7 @@ import numpy as np
 from matplotlib import pyplot
 ```
 
-To investigate the relationship between the number of facilities in a state and the average ranking of hospitals in that state, Spearman's correlation test can be used as we are trying to find the relationship between 2 continuous variables. The assumption in this case is that the relationship is non linear and not normally distributed. Therefore, Spearman's rank correlation is a suitable choice as it is a non-parametric test that assesses the strength and direction of a monotonic relationship.
+To investigate the relationship between the number of facilities in a state and the average ranking of hospitals in that state, Spearman's correlation test can be used as we are trying to find the relationship between 2 continuous variables. The assumption in this case is that the relationship is non-linear and not normally distributed. Therefore, Spearman's rank correlation is a suitable choice as it is a non-parametric test that assesses the strength and direction of a monotonic relationship.
 
 ###### Hypotheses:
 
@@ -82,7 +80,7 @@ if(p<0.05):
     Significant relationship
     
 
-A statistically significant correlation is observed which indicates that we reject the null hypothesis as there is sufficient evidence to claim that there is a significant relationship between the number of facilities in ths state and the ranking of the hospitals in the state. 
+A statistically significant correlation is observed which indicates that we reject the null hypothesis as there is sufficient evidence to claim that there is a significant relationship between the number of facilities in this state and the ranking of the hospitals in the state. 
 
 A positive correlation coefficient indicates a positive relationship as when the number of facilities in a state increases, the ranking of the state also increases. However, the being coefficient close to zero suggests a weak or no linear relationship. 
 
@@ -90,18 +88,18 @@ In this case, it is essential to consider both pieces of information together. A
 
 To further investigate the factors that affect the rankings of the hospitals, the relationship between healthcare spending and the ranking of hospitals will be investigated. 
 
-## Does health care spending correlate to patient satisfaction and ranking of hospitals across different states?
+## Does healthcare spending correlate to patient satisfaction and ranking of hospitals across different states?
 
-To test the hypothesis if the spending on healthcare influence the ranking of the hospitals Per Person State Public Health Funding data is sourced from the [State Health Access Data Assistance Center](https://statehealthcompare.shadac.org/Bulk#1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52/117). 
+To test the hypothesis of the spending on healthcare influence the ranking of the hospitals Per Person State Public Health Funding data is sourced from the [State Health Access Data Assistance Center](https://statehealthcompare.shadac.org/Bulk#1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52/117). 
 This dataset was selected due to its documentation of per capita public healthcare funding by state and alignment with the survey period, both tracking the fiscal year which is expected to yield more precise outcomes [[1]](https://www.investopedia.com/terms/f/fiscalyear.asp#:~:text=For%20example%2C%20the%20U.S.%20government's,channels%20to%20Congress%20for%20approval).
  
-Since the hypothesis is investigating relationship between 2 continous variables - the state wise health expenditure and the hospital ranking in the states, Spearman’s Correlation test will be used again.  
+Since the hypothesis is investigating the relationship between 2 continuous variables - the state-wise health expenditure and the hospital ranking in the states, Spearman’s Correlation test will be used again.    
 
-In addition to the overall hospital ranking, the realtionship between the health expenditure and each of the measure surveyed is tested to prove if there is a statistically significant relationship between the ranking and the evaluation measures. 
+In addition to the overall hospital ranking, the relationship between the health expenditure and each of the measures surveyed is tested to prove if there is a statistically significant relationship between the ranking and the evaluation measures.  
 
 ###### Hypothesis 
     Null Hypothesis: There is no correlation between the 2 variables
-    Alternate Hypothesis: There is a linear relationship between the 2 variables i.e, the measure increases and/or decreases with the health spend.
+    Alternate Hypothesis: There is a linear relationship between the 2 variables i.e., the measure increases and/or decreases with the health spend.
 
 
 ```python
@@ -257,7 +255,7 @@ for measure in measures :
     Spearman p value for measure H_HSP_RATING is 0.034
     
 
-The results of the Spearman's correlation tests suggests that there is statistical significance correlation between the per capital health spend of the states and the ranking and quietness of the hospital facilities in that state. However, the coefficient of test indicates a weak negative correlation between per capita healthcare spending and the ranking and quietness of facilities in the state. This indicates an inverse relationship as per capita healthcare spending increases, the ranking and quietness of facilities tends to decrease, and vice versa. 
+The results of Spearman's correlation tests suggest that there is a statistically significant correlation between the per capita health spending of the states and the ranking and quietness of the hospital facilities in that state. However, the coefficient of the test indicates a weak negative correlation between per capita healthcare spending and the ranking and quietness of facilities in the state. This indicates an inverse relationship as per capita healthcare spending increases, the ranking and quietness of facilities tend to decrease, and vice versa.  
 
 This result suggests an association between the variables but does not necessarily indicate a causal relationship.
 
@@ -304,6 +302,6 @@ for measure in measures:
     Spearman p value for measure H_RECMND is 0.0
     
 
-From the results it can be observed that a statistically significant association exists between all measures and the hospital facility ratings across states. This relationship is positivity strong, implying that as the scores for each measure increase, the ranking of facilities within states also increase.
+From the results, it can be observed that a statistically significant association exists between all measures and the hospital facility ratings across states. This relationship is positively strong, implying that as the scores for each measure increase, the ranking of facilities within states also increases.
 
-In conclusion, neither the number of facilities nor healthcare expenditure directly impacts hospital ratings. However, the analysis suggests that each of the other measures influence these ratings.
+In conclusion, neither the number of facilities nor healthcare expenditure directly impacts hospital ratings. However, the analysis suggests that each of the other measures influences these ratings.
