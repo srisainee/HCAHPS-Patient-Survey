@@ -1,4 +1,4 @@
-![/U.S. HCAHPS Survey Analysis.png](https://github.com/srisainee/HCAHPS-Patient-Survey/blob/main/U.S.%20HCAHPS%20Survey%20Analysis.png)
+![/U.S. HCAHPS Survey Analysis.png](https://github.com/srisainee/HCAHPS-Patient-Survey/blob/main/U.S.%20HCAHPS%20Survey%20Analysis.png =x250)
 
 # U.S HCAHPS Survey Analysis
 
